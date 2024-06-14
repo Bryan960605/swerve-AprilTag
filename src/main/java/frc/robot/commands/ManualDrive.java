@@ -4,24 +4,42 @@
 
 package frc.robot.commands;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
-import static frc.robot.RobotContainer.*;
 
-import frc.robot.Constants;
+import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+
 import frc.robot.subsystems.LimeLightSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 
 public class ManualDrive extends Command {
   /** Creates a new ManualDrive. */
-  private final SwerveSubsystem swerveSubsystem;
-  private final LimeLightSubsystem limelightSubsystem;
+  private final SwerveSubsystem m_SwerveSubsystem;
+  private final LimeLightSubsystem m_LimelightSubsystem;
+  // Inputs
+  private DoubleSupplier xSpeedFunc;
+  private DoubleSupplier ySpeedFunc;
+  private DoubleSupplier zSpeedFunc;
+  private BooleanSupplier isAimModeFunc;
   private double xSpeed;
   private double ySpeed;
   private double zSpeed;
-  public ManualDrive(SwerveSubsystem _swerveSubsystem, LimeLightSubsystem _limelightSubsystem) {
-    this.swerveSubsystem = _swerveSubsystem;
-    this.limelightSubsystem = _limelightSubsystem;
-    addRequirements(swerveSubsystem, limelightSubsystem);
+  private boolean isAimMode;
+  // Slew rate limiter
+  private final SlewRateLimiter xLimiter;
+  private final SlewRateLimiter yLimiter;
+  private final SlewRateLimiter zLimiter;
+  public ManualDrive(SwerveSubsystem swerveSubsystem, LimeLightSubsystem limelightSubsystem, DoubleSupplier xSpeed, DoubleSupplier ySpeed, DoubleSupplier zSpeed, BooleanSupplier isSAimMode) {
+    this.m_SwerveSubsystem = swerveSubsystem;
+    this.m_LimelightSubsystem = limelightSubsystem;
+    this.xSpeedFunc = xSpeed;
+    this.ySpeedFunc = ySpeed;
+    this.zSpeedFunc = zSpeed;
+    xLimiter = new SlewRateLimiter(4);
+    yLimiter = new SlewRateLimiter(4);
+    zLimiter = new SlewRateLimiter(4);
+    addRequirements(m_SwerveSubsystem, m_LimelightSubsystem);
     // Use addRequirements() here to declare subsystem dependencies.
   }
 
@@ -32,18 +50,28 @@ public class ManualDrive extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    if(joystick.getRawButton(1) == true ){
-      xSpeed = limelightSubsystem.xMove();
-      ySpeed = limelightSubsystem.yMove();
-      zSpeed = limelightSubsystem.turn();
-      swerveSubsystem.drive(xSpeed, ySpeed, zSpeed, false);
+    // Get value
+    // 負號加在這
+    xSpeed = -xSpeedFunc.getAsDouble();
+    ySpeed = -ySpeedFunc.getAsDouble();  
+    zSpeed = -zSpeedFunc.getAsDouble();
+    isAimMode = isAimModeFunc.getAsBoolean();
+    if(isAimMode){
+      xSpeed = m_LimelightSubsystem.xMove();
+      ySpeed = m_LimelightSubsystem.yMove();
+      zSpeed = m_LimelightSubsystem.turn();
+      m_SwerveSubsystem.drive(xSpeed, ySpeed, zSpeed, false);
     }
     else{
-      xSpeed = Constants.SwerveConstants.joysickValue(-joystick.getRawAxis(1), 0.08)*0.6;
-      ySpeed = Constants.SwerveConstants.joysickValue(joystick.getRawAxis(0), 0.08)*0.4;
-      zSpeed = Constants.SwerveConstants.joysickValue(joystick.getRawAxis(2), 0.08)*0.4;
-      swerveSubsystem.drive(xSpeed, ySpeed, zSpeed, true);
+      xSpeed = xSpeed*0.4;
+      ySpeed = ySpeed*0.4;
+      zSpeed = zSpeed*0.4;
+      m_SwerveSubsystem.drive(xSpeed, ySpeed, zSpeed, true);
     }
+    // SlewRate
+    xSpeed = xLimiter.calculate(xSpeed);
+    ySpeed = yLimiter.calculate(ySpeed);
+    zSpeed = zLimiter.calculate(zSpeed);
 
   }
 

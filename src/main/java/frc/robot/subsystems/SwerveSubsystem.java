@@ -7,10 +7,7 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import static frc.robot.RobotContainer.*;
-
 import static frc.robot.Constants.SwerveConstants.*;
 
 
@@ -96,12 +93,12 @@ public class SwerveSubsystem extends SubsystemBase{
     public void setPose(Pose2d pose){
         mOdometry.resetPosition(gyro.getRotation2d(), getModulePosition(), pose);
     }
+    public void resetGyro(){
+        gyro.reset();
+    }
     @Override
     public void periodic(){
         mOdometry.update(gyro.getRotation2d(), getModulePosition());
-        SmartDashboard.putNumber("xSpeed", baseJoystick.getRawAxis(1));
-        SmartDashboard.putNumber("ySpeed", baseJoystick.getRawAxis(0));
-        SmartDashboard.putNumber("zSpeed", baseJoystick.getRawAxis(4));
     }
   
     

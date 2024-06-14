@@ -27,14 +27,12 @@ public class SwerveModule extends SubsystemBase{
 
     private final CANcoder absoluteEncoder;
     private final CANcoderConfiguration cancoderConfig;
-    private final double absoluteEncoderOffsetDegree;
 
     private double setpointangle;
     private double angle;
 
     public SwerveModule(int driveMotorID, int turningMotorID, boolean driveMotorReversed, boolean turningMotorReversed, 
                         int absoluteEncoderID, double absoluteEncoderOffsetDegree){
-        this.absoluteEncoderOffsetDegree = absoluteEncoderOffsetDegree;
         absoluteEncoder = new CANcoder(absoluteEncoderID);
         cancoderConfig = new CANcoderConfiguration();
 
